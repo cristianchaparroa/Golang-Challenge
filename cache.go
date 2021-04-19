@@ -2,6 +2,7 @@ package sample1
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -39,7 +40,6 @@ func (c *TransparentCache) GetPriceFor(itemCode string) (float64, error) {
 		} else {
 			c.resetStartAge()
 		}
-		// TODO: check that the price was retrieved less than "maxAge" ago!
 	}
 	price, err := c.actualPriceService.GetPriceFor(itemCode)
 	if err != nil {
@@ -52,15 +52,34 @@ func (c *TransparentCache) GetPriceFor(itemCode string) (float64, error) {
 // GetPricesFor gets the prices for several items at once, some might be found in the cache, others might not
 // If any of the operations returns an error, it should return an error as well
 func (c *TransparentCache) GetPricesFor(itemCodes ...string) ([]float64, error) {
-	results := []float64{}
+	var results []float64
+
+	wg := &sync.WaitGroup{}
+	prices := make(chan float64, len(itemCodes))
+
 	for _, itemCode := range itemCodes {
 		// TODO: parallelize this, it can be optimized to not make the calls to the external service sequentially
-		price, err := c.GetPriceFor(itemCode)
-		if err != nil {
-			return []float64{}, err
-		}
+		// price, err := c.GetPriceFor(itemCode)
+		// if err != nil {
+		// 	return []float64{}, err
+		// }
+		wg.Add(1)
+
+		go func(itemCode string) {
+			price, _ := c.GetPriceFor(itemCode)
+			prices <- price
+			wg.Done()
+		}(itemCode)
+		// results = append(results, price)
+	}
+
+	wg.Wait()
+	close(prices)
+
+	for price := range prices {
 		results = append(results, price)
 	}
+
 	return results, nil
 }
 
