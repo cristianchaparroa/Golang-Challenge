@@ -1,8 +1,8 @@
 package sample1
 
 import (
-	"time"
 	"fmt"
+	"time"
 )
 
 // PriceService is a service that we can use to get prices for the items
