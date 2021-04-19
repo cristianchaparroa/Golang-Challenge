@@ -80,10 +80,7 @@ func (c *TransparentCache) GetPricesFor(itemCodes ...string) ([]float64, error) 
 
 func (c *TransparentCache) isCacheAlive() bool {
 	elapsed := time.Now().Sub(time.Unix(0, 0)).Milliseconds() - c.startAge.Milliseconds()
-	if elapsed > c.maxAge.Milliseconds() {
-		return false
-	}
-	return true
+	return elapsed < c.maxAge.Milliseconds()
 }
 
 func (c *TransparentCache) resetStartAge() {
