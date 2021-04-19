@@ -34,12 +34,11 @@ func NewTransparentCache(actualPriceService PriceService, maxAge time.Duration) 
 func (c *TransparentCache) GetPriceFor(itemCode string) (float64, error) {
 	price, ok := c.prices[itemCode]
 	if ok {
-		elapsed := time.Now().Sub(time.Unix(0, 0)).Milliseconds() - c.startAge.Milliseconds()
-		if elapsed > c.maxAge.Milliseconds() {
+		if c.isCacheAlive() {
+			return price, nil
+		} else {
 			// the start age should be reset
 			c.startAge = time.Duration(time.Now().UnixNano())
-		} else {
-			return price, nil
 		}
 		// TODO: check that the price was retrieved less than "maxAge" ago!
 	}
@@ -64,4 +63,12 @@ func (c *TransparentCache) GetPricesFor(itemCodes ...string) ([]float64, error) 
 		results = append(results, price)
 	}
 	return results, nil
+}
+
+func (c *TransparentCache) isCacheAlive() bool {
+	elapsed := time.Now().Sub(time.Unix(0, 0)).Milliseconds() - c.startAge.Milliseconds()
+	if elapsed > c.maxAge.Milliseconds() {
+		return false
+	}
+	return true
 }
