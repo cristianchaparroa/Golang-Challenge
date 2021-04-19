@@ -16,6 +16,7 @@ type PriceService interface {
 // Cache should only return a price if it is not older than "maxAge", so that we don't get stale prices
 type TransparentCache struct {
 	actualPriceService PriceService
+	startAge           time.Duration
 	maxAge             time.Duration
 	prices             map[string]float64
 }
