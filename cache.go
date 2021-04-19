@@ -56,25 +56,29 @@ func (c *TransparentCache) GetPricesFor(itemCodes ...string) ([]float64, error) 
 
 	wg := &sync.WaitGroup{}
 	prices := make(chan float64, len(itemCodes))
+	errors := make(chan error, len(itemCodes))
 
 	for _, itemCode := range itemCodes {
-		// TODO: parallelize this, it can be optimized to not make the calls to the external service sequentially
-		// price, err := c.GetPriceFor(itemCode)
-		// if err != nil {
-		// 	return []float64{}, err
-		// }
 		wg.Add(1)
 
 		go func(itemCode string) {
-			price, _ := c.GetPriceFor(itemCode)
+			price, err := c.GetPriceFor(itemCode)
+			if err != nil {
+				errors <- err
+				wg.Done()
+			}
 			prices <- price
 			wg.Done()
 		}(itemCode)
-		// results = append(results, price)
 	}
 
 	wg.Wait()
 	close(prices)
+	close(errors)
+
+	for err := range errors {
+		return results, err
+	}
 
 	for price := range prices {
 		results = append(results, price)
