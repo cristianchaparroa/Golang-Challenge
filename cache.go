@@ -34,8 +34,13 @@ func NewTransparentCache(actualPriceService PriceService, maxAge time.Duration) 
 func (c *TransparentCache) GetPriceFor(itemCode string) (float64, error) {
 	price, ok := c.prices[itemCode]
 	if ok {
+		elapsed := time.Now().Sub(time.Unix(0, 0)).Milliseconds() - c.startAge.Milliseconds()
+		if elapsed > c.maxAge.Milliseconds() {
+			// it should not be cached
+		} else {
+			return price, nil
+		}
 		// TODO: check that the price was retrieved less than "maxAge" ago!
-		return price, nil
 	}
 	price, err := c.actualPriceService.GetPriceFor(itemCode)
 	if err != nil {
