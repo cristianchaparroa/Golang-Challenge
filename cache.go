@@ -60,16 +60,7 @@ func (c *TransparentCache) GetPricesFor(itemCodes ...string) ([]float64, error) 
 
 	for _, itemCode := range itemCodes {
 		wg.Add(1)
-
-		go func(itemCode string) {
-			price, err := c.GetPriceFor(itemCode)
-			if err != nil {
-				errors <- err
-				wg.Done()
-			}
-			prices <- price
-			wg.Done()
-		}(itemCode)
+		go c.GetParallelPriceFor(itemCode, prices, errors, wg)
 	}
 
 	wg.Wait()
@@ -97,4 +88,14 @@ func (c *TransparentCache) isCacheAlive() bool {
 
 func (c *TransparentCache) resetStartAge() {
 	c.startAge = time.Duration(time.Now().UnixNano())
+}
+
+func (c *TransparentCache) GetParallelPriceFor(itemCode string, prices chan float64, errors chan error, wg *sync.WaitGroup) {
+	price, err := c.GetPriceFor(itemCode)
+	if err != nil {
+		errors <- err
+		wg.Done()
+	}
+	prices <- price
+	wg.Done()
 }
