@@ -36,7 +36,8 @@ func (c *TransparentCache) GetPriceFor(itemCode string) (float64, error) {
 	if ok {
 		elapsed := time.Now().Sub(time.Unix(0, 0)).Milliseconds() - c.startAge.Milliseconds()
 		if elapsed > c.maxAge.Milliseconds() {
-			// it should not be cached
+			// the start age should be reset
+			c.startAge = time.Duration(time.Now().UnixNano())
 		} else {
 			return price, nil
 		}
