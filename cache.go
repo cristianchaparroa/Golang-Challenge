@@ -24,6 +24,7 @@ type TransparentCache struct {
 func NewTransparentCache(actualPriceService PriceService, maxAge time.Duration) *TransparentCache {
 	return &TransparentCache{
 		actualPriceService: actualPriceService,
+		startAge:           time.Duration(time.Now().UnixNano()),
 		maxAge:             maxAge,
 		prices:             map[string]float64{},
 	}
