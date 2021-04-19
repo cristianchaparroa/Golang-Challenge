@@ -77,16 +77,18 @@ func (c *TransparentCache) GetPricesFor(itemCodes ...string) ([]float64, error) 
 
 	return results, nil
 }
-
+// isCacheAlive verifies if the elapsed time is before to the maxAge to query the
+// prices from services or cache.
 func (c *TransparentCache) isCacheAlive() bool {
 	elapsed := time.Now().Sub(time.Unix(0, 0)).Milliseconds() - c.startAge.Milliseconds()
 	return elapsed < c.maxAge.Milliseconds()
 }
 
+// resetStartAge assigns the current time to the startAge.  
 func (c *TransparentCache) resetStartAge() {
 	c.startAge = time.Duration(time.Now().UnixNano())
 }
-
+// GetParallelPriceFor retrieves the prices using channels.
 func (c *TransparentCache) GetParallelPriceFor(itemCode string, prices chan float64, errors chan error, wg *sync.WaitGroup) {
 	price, err := c.GetPriceFor(itemCode)
 	if err != nil {
