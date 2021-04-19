@@ -37,8 +37,7 @@ func (c *TransparentCache) GetPriceFor(itemCode string) (float64, error) {
 		if c.isCacheAlive() {
 			return price, nil
 		} else {
-			// the start age should be reset
-			c.startAge = time.Duration(time.Now().UnixNano())
+			c.resetStartAge()
 		}
 		// TODO: check that the price was retrieved less than "maxAge" ago!
 	}
@@ -71,4 +70,8 @@ func (c *TransparentCache) isCacheAlive() bool {
 		return false
 	}
 	return true
+}
+
+func (c *TransparentCache) resetStartAge() {
+	c.startAge = time.Duration(time.Now().UnixNano())
 }
